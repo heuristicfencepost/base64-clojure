@@ -21,7 +21,7 @@
         str2-int (from-ascii (first (rest arg)))
         part1 (bit-shift-left str1-int 4)
         part2 (bit-shift-right str2-int 4)]
-    (to-base64 (bit-and 0x3F (bit-and part1 part2)))
+    (to-base64 (bit-and 0x3F (bit-or part1 part2)))
   )
   )
 
@@ -30,7 +30,7 @@
         str3-int (from-ascii (first (rest (rest arg))))
         part1 (bit-shift-left str2-int 2)
         part2 (bit-shift-right str3-int 6)]
-    (to-base64 (bit-and 0x3F (bit-and part1 part2)))
+    (to-base64 (bit-and 0x3F (bit-or part1 part2)))
   )
   )
 
@@ -44,7 +44,7 @@
   (let [l (count arg)]
 
     (cond (= l 0) ""
-          (= l 1) (str (get-base64-first arg) (get-base64-second arg))
+          (= l 1) (get-base64-first arg)
           (= l 2) (str (get-base64-first arg) (get-base64-second arg))
           (= l 3) (str (get-base64-first arg) (get-base64-second arg) (get-base64-third arg))
     )
