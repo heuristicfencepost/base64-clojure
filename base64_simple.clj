@@ -28,19 +28,18 @@
   )
 
 (defn base64-encode [arg]
-  (let [l (count arg)]
-
-    (cond (= l 0) ""
-          (= l 1)
-          (let [{sofar :sofar candidate :candidate} (do-one-byte (from-ascii (first arg)))]
-            (str (apply str (map #(to-base64 %) sofar)) (to-base64 candidate) "==")
-            )
-          (= l 2)
-          (let [{sofar :sofar candidate :candidate} (do-two-bytes (vec (map #(from-ascii %) arg)))]
-            (str (apply str (map #(to-base64 %) sofar)) (to-base64 candidate) "=")
-            )
-          (= l 3)
-          (apply str (map #(to-base64 %) (do-three-bytes (vec (map #(from-ascii %) arg)))))
-          )
-    )
-  )
+  (letfn [
+      (somefn [somebytes]
+                (let [someints (vec (map #(from-ascii %) somebytes)) l (count someints)]
+                  (cond
+                   (= l 3)
+                   (apply str (map #(to-base64 %) (do-three-bytes someints)))
+                   (= l 2)
+                   (let [{sofar :sofar candidate :candidate} (do-two-bytes someints)]
+                     (str (apply str (map #(to-base64 %) sofar)) (to-base64 candidate) "=")
+                     )
+                   (= l 1)
+                   (let [{sofar :sofar candidate :candidate} (do-one-byte (first someints))]
+                     (str (apply str (map #(to-base64 %) sofar)) (to-base64 candidate) "==")
+                     ))))]
+    (apply str (map somefn (partition 3 3 () arg)))))
