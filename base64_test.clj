@@ -6,7 +6,7 @@
 (use '[fencepost.base64])
 
 (def sample-size 10000)
-(def string-size 32)
+(def string-size 64)
 
 ; Build up some sample data using commons-lang
 (def sample-data (map #(RandomStringUtils/randomAlphabetic %) (repeat sample-size string-size)))
