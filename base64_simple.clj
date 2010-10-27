@@ -1,13 +1,13 @@
+(ns fencepost.base64)
+
+; This could be placed within the defn below but rebuilding this map
+; on each invocation seems a bit wasteful.
 (def to-base64 
-  (zipmap 
-    (range 0 63)
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))
-    
-(def from-ascii 
-  (zipmap 
-   "!\"#$%&'()*+'-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-   (range 33 126)
-   ))
+     (zipmap 
+      (range 0 63)
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+     )
+
 
 (defn base64-encode [#^String arg]
   (letfn [
@@ -26,8 +26,8 @@
                         (conj (conj sofar (bit-or candidate (bit-shift-right bytethree 6))) (bit-and 0x3F bytethree))
                         )
                       )
-      (somefn [somebytes]
-                (let [someints (vec (map #(from-ascii %) somebytes)) l (count someints)]
+      (somefn [somechars]
+                (let [from-ascii (memoize int) someints (vec (map from-ascii somechars)) l (count someints)]
                   (cond
                    (= l 3)
                    (apply str (map #(to-base64 %) (do-three-bytes someints)))
