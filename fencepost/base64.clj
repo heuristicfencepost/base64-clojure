@@ -4,7 +4,7 @@
 ; on each invocation seems a bit wasteful.
 (def to-base64 
      (zipmap 
-      (range 0 63)
+      (range 0 64)
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
      )
 
