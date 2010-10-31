@@ -3,7 +3,7 @@
 (import '(org.apache.commons.codec.binary Base64))
 (import '(org.apache.commons.lang RandomStringUtils))
 (use '[clojure.contrib.base64])
-(use '[fencepost.base64])
+(use '[fencepost.base64_letfn])
 
 (def sample-size 100)
 (def max-string-size 256)
@@ -23,6 +23,7 @@
 (println "Commons-codec")
 (def commons-codec-data (time (vec (map #(new String (.encode codec-base64 (.getBytes %))) sample-data))))
 (println (get commons-codec-data 0))
+
 (println "clojure-contrib")
 (def clojure-contrib-data (time (vec (map #(clojure.contrib.base64/encode-str %) sample-data))))
 (println (get clojure-contrib-data 0))
@@ -32,7 +33,7 @@
 ; canonical sample.
 (assert (.equals(get commons-codec-data 0) (get clojure-contrib-data 0)))
 
-(println "fencepost")
-(def fencepost-data (time (vec (map #(fencepost.base64/base64-encode %) sample-data))))
+(println "fencepost/base64_letfn")
+(def fencepost-data (time (vec (map #(fencepost.base64_letfn/base64-encode-ascii %) sample-data))))
 (println (get fencepost-data 0))
 (assert (.equals (get commons-codec-data 0) (get fencepost-data 0)))
