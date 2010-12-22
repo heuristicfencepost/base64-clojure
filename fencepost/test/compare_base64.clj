@@ -4,6 +4,7 @@
 (import '(org.apache.commons.lang RandomStringUtils))
 (use '[clojure.contrib.base64])
 (use '[fencepost.base64_letfn])
+(use '[fencepost.base64-recur])
 
 (def sample-size 100)
 (def max-string-size 256)
@@ -37,3 +38,8 @@
 (def fencepost-data (time (vec (map #(fencepost.base64_letfn/base64-encode-ascii %) sample-data))))
 (println (get fencepost-data 0))
 (assert (.equals (get commons-codec-data 0) (get fencepost-data 0)))
+
+(println "fencepost-recur")
+(def fencepost-recur-data (time (vec (map #(fencepost.base64-recur/base64-encode-recur %) sample-data))))
+(println (get fencepost-recur-data 0))
+(assert (.equals (get commons-codec-data 0) (get fencepost-recur-data 0)))
