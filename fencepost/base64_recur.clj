@@ -59,47 +59,56 @@
 
 (defn base64-decode-recur [#^String arg]
   "Decode the string of base64-encoded content into a String"
-  (loop [currbytes arg
+  (loop [currstr arg
          rv ""]
-    (let [samplesize (count currbytes)]
+    (let [currstrsize (count currstr)]
       (cond
        ; String longer than 4 characters
-       (> samplesize 4)
-       (let [[char1 char2 char3 char4] (map from-base64-recur (apply str (take 4 currbytes))) 
+       (> currstrsize 4)
+       (let [[char1 char2 char3 char4] (map from-base64-recur (take 4 currstr)) 
              byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
              byte2 (bit-and 0xff (bit-or (bit-shift-left char2 4) (bit-shift-right char3 2)))
              byte3 (bit-and 0xff (bit-or (bit-shift-left char3 6) char4))
              newstr (String. (byte-array (map byte [byte1 byte2 byte3])))]
-         (recur (.substring currbytes 4) (str rv newstr))
+         (recur (.substring currstr 4) (str rv newstr))
          )
-       ; Third byte is the bottom two bits of byte 2 plus all six low
-       ; bits of byte 3
-       (re-matches #"[A-Za-z0-9+/]{4}" (apply str (take 4 currbytes)))
-       (let [[char1 char2 char3 char4] (map from-base64-recur (apply str (take 4 currbytes)))
-             byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
-             byte2 (bit-and 0xff (bit-or (bit-shift-left char2 4) (bit-shift-right char3 2)))
-             byte3 (bit-and 0xff (bit-or (bit-shift-left char3 6) char4))
-             newstr (String. (byte-array (map byte [byte1 byte2 byte3])))]
-         (str rv newstr)
+       (= currstrsize 0) ""
+       (< currstrsize 4)
+       (throw (IllegalArgumentException. "Malformed base64 string; must have even multiple of four characters"))
+       (identity 1)
+       (let [curratom (apply str (take 4 currstr))]
+         (cond
+          ; Third byte is the bottom two bits of byte 2 plus all six low
+          ; bits of byte 3
+          (re-matches #"[A-Za-z0-9+/]{4}" curratom)
+          (let [[char1 char2 char3 char4] (map from-base64-recur (take 4 currstr))
+                byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
+                byte2 (bit-and 0xff (bit-or (bit-shift-left char2 4) (bit-shift-right char3 2)))
+                byte3 (bit-and 0xff (bit-or (bit-shift-left char3 6) char4))
+                newstr (String. (byte-array (map byte [byte1 byte2 byte3])))]
+            (str rv newstr)
+            )
+          ; Second byte is the low four bits of byte 2 plus the top four
+          ; bits of byte 3
+          (re-matches #"[A-Za-z0-9+/]{3}=" curratom)
+          (let [[char1 char2 char3] (map from-base64-recur (take 3 currstr))
+                byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
+                byte2 (bit-and 0xff (bit-or (bit-shift-left char2 4) (bit-shift-right char3 2)))
+                newstr (String. (byte-array (map byte [byte1 byte2])))]
+            (str rv newstr)
+            )
+          ; First byte is the low six bits of byte 1 plus the top two
+          ; bits of byte 2
+          (re-matches #"[A-Za-z0-9+/]{2}==" curratom)
+          (let [[char1 char2] (map from-base64-recur (take 2 currstr))
+                byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
+                newstr (String. (byte-array [(byte byte1)]))]
+            (str rv newstr)
+            )
+          (identity 1)
+          (throw (IllegalArgumentException. "Malformed base64 string"))
+          )
          )
-       ; Second byte is the low four bits of byte 2 plus the top four
-       ; bits of byte 3
-       (re-matches #"[A-Za-z0-9+/]{3}=" (apply str (take 4 currbytes)))
-       (let [[char1 char2 char3] (map from-base64-recur (apply str (take 3 currbytes)))
-             byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
-             byte2 (bit-and 0xff (bit-or (bit-shift-left char2 4) (bit-shift-right char3 2)))
-             newstr (String. (byte-array (map byte [byte1 byte2])))]
-         (str rv newstr)
-         )
-       ; First byte is the low six bits of byte 1 plus the top two
-       ; bits of byte 2
-       (re-matches #"[A-Za-z0-9+/]{2}==" (apply str (take 4 currbytes)))
-       (let [[char1 char2] (map from-base64-recur (apply str (take 2 currbytes)))
-             byte1 (bit-or (bit-shift-left char1 2) (bit-shift-right char2 4))
-             newstr (String. (byte-array [(byte byte1)]))]
-         (str rv newstr)
-         )
-       (= samplesize 0) ""
        )
       )
     )
